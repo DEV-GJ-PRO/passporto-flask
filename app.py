@@ -141,5 +141,5 @@ def privacy():
     return render_template('privacy.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))  # default fallback port
+    port = int(os.environ.get("PORT", 8000))  # default fallback port
     app.run(host="0.0.0.0", port=port)
