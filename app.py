@@ -131,9 +131,9 @@ def download(filename):
     )
 
 # Serve service worker
-@app.route('/site/sw.js')
-def serve_sw():
-    return send_file('static/sw.js', mimetype='application/javascript')
+# @app.route('/site/sw.js')
+# def serve_sw():
+#     return send_file('static/sw.js', mimetype='application/javascript')
 
 # Privacy policy
 @app.route('/privacy')
