@@ -1,0 +1,107 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Background Remover and Editor</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Photo Background Remover and Editor</h1>
+    <p>Upload a photo, choose to keep or remove the background (with a grey background if removed), resize it, and enhance it for download.</p>
+
+    <!-- PropellerAds Banner -->
+    <div style="text-align: center; margin: 20px 0;">
+        <script async src="//propellerads.com/push/js/push.min.js"></script>
+        <div class="propeller-ad" data-zoneid="YOUR_ZONE_ID"></div>
+        <script>
+            try {
+                (PropellerAds = window.PropellerAds || []).push({zoneid: 'YOUR_ZONE_ID'});
+            } catch (e) {
+                console.error('PropellerAds error:', e);
+            }
+        </script>
+    </div>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        <label for="image">Choose an image (JPG, JPEG, PNG):</label><br>
+        <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png" required><br><br>
+
+        <label>Background Option:</label><br>
+        <input type="radio" id="keep_bg" name="bg_option" value="Keep Background" checked>
+        <label for="keep_bg">Keep Background</label>
+        <input type="radio" id="remove_bg" name="bg_option" value="Remove Background">
+        <label for="remove_bg">Remove Background</label><br><br>
+
+        <label for="target_width">Target Width (pixels):</label>
+        <input type="number" id="target_width" name="target_width" min="100" max="4000" value="800" required><br><br>
+
+        <label for="target_height">Target Height (pixels):</label>
+        <input type="number" id="target_height" name="target_height" min="100" max="4000" value="600" required><br><br>
+
+        <label for="target_size_kb">Target File Size (KB):</label>
+        <input type="number" id="target_size_kb" name="target_size_kb" min="10" max="5000" value="100" required><br><br>
+
+        <button type="submit">Process Image</button>
+    </form>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/site/sw.js', { scope: '/' })
+                .then(reg => console.log('Service Worker registered:', reg.scope))
+                .catch(err => console.error('Service Worker error:', err));
+        }
+    </script>
+
+    <!-- Cookie Consent -->
+    <div id="cookie-consent" style="position: fixed; bottom: 0; background: #333; color: #fff; padding: 10px; width: 100%; left:0px;">
+        We use cookies for ads. <a href="/privacy">Learn more</a> | <button onclick="document.getElementById('cookie-consent').style.display='none';">Accept</button>
+    </div>
+
+    <p>Note: Face detection may not work perfectly for all images.</p>
+</body>
+</html>

@@ -1,0 +1,6 @@
+Flask
+rembg
+opencv-python
+Pillow
+numpy
+gunicorn
